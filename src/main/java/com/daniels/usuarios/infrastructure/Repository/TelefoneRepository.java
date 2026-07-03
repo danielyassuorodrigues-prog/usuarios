@@ -1,6 +1,7 @@
 package com.daniels.usuarios.infrastructure.Repository;
 
-import com.daniel.aprendendo_string.infrastructure.entity.Telefone;
+
+import com.daniels.usuarios.infrastructure.entity.Telefone;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

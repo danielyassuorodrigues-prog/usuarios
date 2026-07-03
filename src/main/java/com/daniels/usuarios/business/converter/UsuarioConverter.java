@@ -1,9 +1,9 @@
-package com.daniels.usuarios.infrastructure.business.converter;
+package com.daniels.usuarios.business.converter;
 
 
-import com.daniels.usuarios.infrastructure.business.dto.EnderecoDTO;
-import com.daniels.usuarios.infrastructure.business.dto.TelefoneDTO;
-import com.daniels.usuarios.infrastructure.business.dto.UsuarioDTO;
+import com.daniels.usuarios.business.dto.EnderecoDTO;
+import com.daniels.usuarios.business.dto.TelefoneDTO;
+import com.daniels.usuarios.business.dto.UsuarioDTO;
 import com.daniels.usuarios.infrastructure.entity.Endereco;
 import com.daniels.usuarios.infrastructure.entity.Telefone;
 import com.daniels.usuarios.infrastructure.entity.Usuario;

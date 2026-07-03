@@ -1,4 +1,4 @@
-package com.daniels.usuarios.infrastructure.business.dto;
+package com.daniels.usuarios.business.dto;
 
 
 import lombok.*;
