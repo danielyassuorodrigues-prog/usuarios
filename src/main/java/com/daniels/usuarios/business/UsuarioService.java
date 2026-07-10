@@ -2,8 +2,14 @@ package com.daniels.usuarios.business;
 
 
 import com.daniels.usuarios.business.converter.UsuarioConverter;
+import com.daniels.usuarios.business.dto.EnderecoDTO;
+import com.daniels.usuarios.business.dto.TelefoneDTO;
 import com.daniels.usuarios.business.dto.UsuarioDTO;
+import com.daniels.usuarios.infrastructure.Repository.EnderecoRepository;
+import com.daniels.usuarios.infrastructure.Repository.TelefoneRepository;
 import com.daniels.usuarios.infrastructure.Repository.UsuarioRepository;
+import com.daniels.usuarios.infrastructure.entity.Endereco;
+import com.daniels.usuarios.infrastructure.entity.Telefone;
 import com.daniels.usuarios.infrastructure.entity.Usuario;
 import com.daniels.usuarios.infrastructure.exceptions.ConflictException;
 import com.daniels.usuarios.infrastructure.exceptions.ResourceNotFoundException;
@@ -20,6 +26,8 @@ public class UsuarioService {
     private final UsuarioConverter usuarioConverter;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EnderecoRepository enderecoRepository;
+    private final TelefoneRepository telefoneRepository;
 
 
      //metodo que salva usuario
@@ -56,9 +64,16 @@ public class UsuarioService {
     }
 
     //busca o usuario atraves do email, metodo pronto do JPA tambem
-    public Usuario buscarUsuarioPorEmail(String email) {
+    public UsuarioDTO buscarUsuarioPorEmail(String email) {
         //como pode não encontrar o email , lançamos uma ecessão caso não encontre nada
-        return repository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Email não encontrado " + email));
+        try{
+            return  usuarioConverter.paraUsuarioDTO(repository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Email não encontrado " + email)));
+        } catch (ResourceNotFoundException e) {
+            throw new RuntimeException("Email não Encontrado " + e.getCause());
+        }
+
+
+
     }
 
     //deleta o email
@@ -84,6 +99,22 @@ public class UsuarioService {
 
         //convertemos de DTO para usuario, para podermos salvar no banco de dados e retornamos um DTO ao usuario
         return usuarioConverter.paraUsuarioDTO(repository.save(usuario));
+    }
+
+    public EnderecoDTO atualizaEndereco (Long idEndereco, EnderecoDTO enderecoDTO) {
+        Endereco entity = enderecoRepository.findById(idEndereco).orElseThrow(() -> new ResourceNotFoundException("Id não encontrado"));
+
+        Endereco endereco = usuarioConverter.updateEndereco(enderecoDTO , entity);
+
+        return usuarioConverter.paraEnderecoDTO(enderecoRepository.save(endereco));
+    }
+
+    public TelefoneDTO atualizaTelefone(Long idTelefone, TelefoneDTO telefoneDTO) {
+        Telefone entity = telefoneRepository.findById(idTelefone).orElseThrow(() -> new ResourceNotFoundException("Id não Encontrado"));
+
+        Telefone telefone = usuarioConverter.updateTelefone(telefoneDTO, entity);
+
+        return usuarioConverter.paraTelefoneDTO(telefoneRepository.save(telefone));
     }
 
 
