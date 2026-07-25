@@ -39,7 +39,7 @@ public class UsuarioController {
 
 
     @GetMapping
-    public ResponseEntity<UsuarioDTO> buscarUsuarioPorEmail(@RequestParam String email) {
+    public ResponseEntity<UsuarioDTO> buscarUsuarioPorEmail(@RequestParam("email") String email) {
         return ResponseEntity.ok(usuarioService.buscarUsuarioPorEmail(email));
     }
 
