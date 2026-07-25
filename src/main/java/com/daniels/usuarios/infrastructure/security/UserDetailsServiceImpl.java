@@ -30,4 +30,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .password(usuario.getSenha()) // Define a senha do usuário
                 .build(); // Constrói o objeto UserDetails
     }
+
 }
