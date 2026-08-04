@@ -1,9 +1,11 @@
 package com.daniels.usuarios.business.controller;
 
 import com.daniels.usuarios.business.UsuarioService;
+import com.daniels.usuarios.business.ViaCepService;
 import com.daniels.usuarios.business.dto.EnderecoDTO;
 import com.daniels.usuarios.business.dto.TelefoneDTO;
 import com.daniels.usuarios.business.dto.UsuarioDTO;
+import com.daniels.usuarios.business.dto.ViaCepDTO;
 import com.daniels.usuarios.infrastructure.security.JwtUtil;
 import com.daniels.usuarios.infrastructure.security.SecurityConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final ViaCepService viaCepService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
@@ -124,6 +127,13 @@ public class UsuarioController {
     public ResponseEntity<TelefoneDTO> cadastraTelefone(@RequestBody TelefoneDTO dto, @RequestHeader("Authorization") String token){
         return ResponseEntity.ok(usuarioService.cadastraTelefone(token, dto));
     }
+
+    @GetMapping("/endereco/{cep}")
+    public ResponseEntity<ViaCepDTO> buscarDadosCep(@PathVariable("cep") String cep){
+        return ResponseEntity.ok(viaCepService.buscarDadosEndereco(cep));
+    }
+
+
 
 
 
