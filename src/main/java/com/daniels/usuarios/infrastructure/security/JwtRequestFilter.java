@@ -1,16 +1,21 @@
 package com.daniels.usuarios.infrastructure.security;
 
+import com.daniels.usuarios.business.dto.ErrorResponseDTO;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 // Define a classe JwtRequestFilter, que estende OncePerRequestFilter
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -28,35 +33,63 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     // Método chamado uma vez por requisição para processar o filtro
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+
             throws ServletException, IOException {
+        //tratando as excessões com o try catch, porém aqui tem que ser um pouco diferente
+        try {
+            // Obtém o valor do header "Authorization" da requisição
+            final String authorizationHeader = request.getHeader("Authorization");
 
-        // Obtém o valor do header "Authorization" da requisição
-        final String authorizationHeader = request.getHeader("Authorization");
+            // Verifica se o cabeçalho existe e começa com "Bearer "
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                // Extrai o token JWT do cabeçalho
+                final String token = authorizationHeader.substring(7);
+                // Extrai o nome de usuário do token JWT
+                final String username = jwtUtil.extraitEmailToken(token);
 
-        // Verifica se o cabeçalho existe e começa com "Bearer "
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            // Extrai o token JWT do cabeçalho
-            final String token = authorizationHeader.substring(7);
-            // Extrai o nome de usuário do token JWT
-            final String username = jwtUtil.extraitEmailToken(token);
+                // Se o nome de usuário não for nulo e o usuário não estiver autenticado ainda
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Carrega os detalhes do usuário a partir do nome de usuário
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    // Valida o token JWT
+                    if (jwtUtil.validateToken(token, username)) {
+                        // Cria um objeto de autenticação com as informações do usuário
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        // Define a autenticação no contexto de segurança
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
 
-            // Se o nome de usuário não for nulo e o usuário não estiver autenticado ainda
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Carrega os detalhes do usuário a partir do nome de usuário
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                // Valida o token JWT
-                if (jwtUtil.validateToken(token, username)) {
-                    // Cria um objeto de autenticação com as informações do usuário
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    // Define a autenticação no contexto de segurança
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
+
             }
+
+
+            // Continua a cadeia de filtros, permitindo que a requisição prossiga
+            chain.doFilter(request, response);
+
+        } catch (ExpiredJwtException e) {
+            //postman vai setar o status de unauthorized
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write(buildError(HttpStatus.UNAUTHORIZED.value(),
+                    "Token Expirado", request.getRequestURI(), e.getMessage()));
+
         }
+    }
 
+    private String buildError(int status, String mensagem, String path, String error) {
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .timeStamp(LocalDateTime.now())
+                .message(mensagem)
+                .erro(error)
+                .status(status)
+                .path(path)
+                .build();
 
-        // Continua a cadeia de filtros, permitindo que a requisição prossiga
-        chain.doFilter(request, response);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registeredModules();
+
+        return objectMapper.writeValueAsString(errorResponseDTO);
     }
 }
