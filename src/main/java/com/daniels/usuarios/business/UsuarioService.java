@@ -50,13 +50,17 @@ public class UsuarioService {
         return usuarioConverter.paraUsuarioDTO(repository.save(usuario));
     }
 
+    //metodo que autentica usuario e faz login
     public String autenticarUsuario(UsuarioDTO usuarioDTO) {
         try{
+            //verifica se as informações do usuário são válidas
             Authentication authentication = authenticationManager.authenticate(
+                    //Está pegando as informações do usuário e tentando autenticar o usuário com essas informações
                     new UsernamePasswordAuthenticationToken(usuarioDTO.getEmail(),
                             usuarioDTO.getSenha()
                     )
             );
+            //gerar o token jwt , para fazer login , o que permite o usuario acessar as funcionalidades do sistema
             return "Bearer " + jwtUtil.generateToken(authentication.getName());
         }catch (BadCredentialsException | UsernameNotFoundException | AuthorizationDeniedException e){
             throw new UnauthorizedException("Usuário ou senha Inválidos : " + e.getCause());
